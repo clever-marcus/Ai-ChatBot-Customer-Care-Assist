@@ -33,16 +33,27 @@ export default function App() {
       };
 
       setMessages((prev) => [...prev, aiMsg]);
+
+      // Voice output for AI replies
+      const utterance = new SpeechSynthesisUtterance(aiMsg.text);
+      utterance.lang = "en-US",
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      speechSynthesis.speak(utterance);
     } catch (error) {
       console.error(error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: "⚠️ Sorry, something went wrong connecting to the AI server.",
+          time: new Date().toLocaleTimeString([], { 
+            hour: "2-digit", 
+            minute: "2-digit" 
+          }),
+        },
+      ]);
 
-      const errorMsg = {
-        sender: "ai",
-        text: "⚠️ Sorry, something went wrong connecting to the AI server.",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-
-      setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setLoading(false);
     }
@@ -55,6 +66,14 @@ export default function App() {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const speakText = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 1; // normal speed
+    utterance.pitch = 1; // normal tone
+    speechSynthesis.speak(utterance);
   };
 
   return (
@@ -76,13 +95,23 @@ export default function App() {
               <div className="flex justify-between items-start gap-2">
                 <p className="pr-10 break-words">{msg.text}</p>
                 {msg.sender === "ai" && (
-                  <button
-                    onClick={() => copyToClipboard(msg.text)}
-                    className="text-gray-500 hover:text-gray-700"
-                    title="Copy response"
-                  >
-                    <FiCopy size={16} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => copyToClipboard(msg.text)}
+                      className="text-gray-500 hover:text-gray-700"
+                      title="Copy response"
+                    >
+                      <FiCopy size={16} />
+                    </button>
+
+                    {/* Speaker Button */}
+                    <button onClick={()=> speakText(msg.text)}
+                      className="text-gray-500 hover:text-blue-600 cursor-pointer"
+                      title="Play voice"
+                      >
+                        🔊
+                    </button>
+                  </div>
                 )}
               </div>
 
